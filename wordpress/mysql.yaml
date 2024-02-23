@@ -1,0 +1,92 @@
+#pv-mysql
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-local-back
+  labels:
+    data: back
+spec:
+  storageClassName: back
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volume-data-back"
+
+---
+#pvc-mysql
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-mysql
+  labels:
+    app: mysql
+spec:
+  storageClassName: back
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+#svc-ClusterIP-mysql
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-cluserip-mysql
+  labels:
+    app: mysql
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mysql
+  clusterIP: None
+
+---
+#Deployment-mysql
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-mysql
+  labels:
+    app: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql
+        name: mysql-cont
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass-root
+              key: password
+        - name: MYSQL_DATABASE     
+          value: wordpress
+        - name: MYSQL_USER
+          value: wordpress
+        - name: MYSQL_PASSWORD     
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql-cont
+        volumeMounts:
+        - name: mysql-stockage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-stockage
+        persistentVolumeClaim:
+          claimName: pvc-mysql

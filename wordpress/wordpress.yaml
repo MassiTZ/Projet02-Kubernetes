@@ -1,0 +1,88 @@
+#pv-mysql
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-local-font
+  labels:
+    data: font
+spec:
+  storageClassName: font
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volume-data-font"
+
+---
+#pvc-mysql
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-wordpress
+  labels:
+    app: wordpress
+spec:
+  storageClassName: font
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+#NodePort-wordpress
+apiVersion: v1
+kind: Service
+metadata:
+  name: srv-nodeport-wordpress
+  labels:
+    app: wordpress
+spec:
+  type: NodePort
+  selector:
+    app: wordpress
+  ports:
+  -  port: 80
+     targetPort: 80
+
+---
+#Deploy-wordpress
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-depl
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: wordpress
+        name: wordpress-cont
+        env:
+        - name: WORDPRESS_DB_HOST    
+          value: svc-cluserip-mysql        
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: WORDPRESS_DB_USER    
+          value: wordpress
+        ports:
+        - containerPort: 80
+          name: wordpress-cont
+        volumeMounts:
+        - name: wordpress-stockage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-stockage
+        persistentVolumeClaim:
+          claimName: pvc-wordpress
