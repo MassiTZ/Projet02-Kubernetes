@@ -1,4 +1,4 @@
-![image](https://github.com/MassiTZ/Projet02-Kubernetes/assets/155676866/298660cc-ceda-4ada-8169-4fcceede3eec)# Déploiement de l'environnement de production pour WordPress en On-Premise avec Kubernetes et Vagrant
+# Déploiement de l'environnement de production pour WordPress en On-Premise avec Kubernetes et Vagrant
 
 Ce dépôt permet de déployer un environnement de production pour WordPress en On-Premise avec Kubernetes et Vagrant.
 
